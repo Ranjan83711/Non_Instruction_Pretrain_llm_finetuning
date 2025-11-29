@@ -1,233 +1,260 @@
-# Non_Instruction_Pretrain_llm_finetuning
+📘 Documentation: Non-Instruction Pretraining & Domain-Specific Finetuning of LLMs
 
-Non-Instruction Pretraining & Domain-Specific Finetuning of LLMs
+This documentation describes the workflow, methodology, and usage of the Jupyter notebook
+Non_Instruction_pretrain_llm_finetuning_on_domain_specific_data.ipynb,
+which demonstrates how to continue pretraining a Large Language Model (LLM) on raw domain-specific text data.
 
-This repository contains a Jupyter notebook demonstrating non-instruction finetuning (also called continued pretraining) of a Large Language Model using your own custom domain-specific text data.
+This process is also known as:
 
-Unlike instruction-tuning—which requires question–answer pairs—this project shows how to train a model on raw text only, letting it learn domain context, terminology, and writing style.
+Non-Instruction Finetuning
 
-📌 What This Notebook Covers
-✔️ 1. Loading and Understanding Custom Non-Instruction Data
+Domain Adaptation
 
-The notebook begins by explaining how raw domain text is used for continued pretraining.
-This includes:
+Continued Pretraining (CTP)
 
-Preparing raw .txt or combined text corpus
+Causal Language Modeling (CLM) Training
 
-Cleaning, deduplication, formatting
+1. Overview
 
-Converting text into a dataset compatible with HuggingFace Datasets
+The purpose of this notebook is to train an existing LLM (e.g., TinyLLaMA) on custom textual data to make it:
 
-Understanding causal language modeling (CLM) targets
+More knowledgeable about a particular domain
+
+Better aligned to domain vocabulary and writing style
+
+More accurate in downstream tasks (summaries, Q/A, completions, etc.)
+
+Ready for later instruction-tuning or RAG pipelines
+
+The training method uses Causal Language Modeling, requiring only plain text, without prompts or annotation.
+
+2. Workflow Summary
+
+The notebook implements the following workflow:
+
+Step 1 — Load Raw Custom Corpus
+
+Accepts .txt or combined text files.
+
+Performs cleaning, concatenation, deduplication.
+
+Loads data into a HuggingFace Dataset.
+
+Step 2 — Select Base Model
+
+Notebook uses a TinyLLaMA checkpoint (~1.4M steps).
+
+This checkpoint is lightweight and suitable for:
+
+Faster training
+
+Lower compute usage
+
+Research and prototyping
+
+Step 3 — Tokenization & Preprocessing
+
+The dataset is processed to fit the CLM training format:
+
+Item	Description
+Tokenization	Converts text to token IDs
+Grouping	Fixed-length sequences (e.g., 512/1024 tokens)
+Labels	Shifted by 1 position for next-token prediction
 
 Example:
 
 Input:  "The cat sat on the"
 Label:  "cat sat on the mat"
 
-✔️ 2. Choosing a Base Model (TinyLLaMA Checkpoint)
+Step 4 — Configure Training Pipeline
 
-The notebook uses a TinyLLaMA checkpoint (~1.4M steps mid-training).
-These checkpoints are lightweight and excellent for:
+The notebook configures:
 
-Research
+AutoModelForCausalLM
 
-Finetuning on small datasets
-
-Resource-constrained training
-
-It also explains:
-
-Why mid-training checkpoints work better for domain adaptation
-
-Model size, tokenizer behavior, and architecture overview
-
-✔️ 3. Preprocessing Dataset for Causal LM
-
-The notebook walks through:
-
-Tokenizing text
-
-Grouping tokens into fixed-size training blocks
-
-Creating train–test splits
-
-Formatting input/label pairs for CLM
-
-Ensuring the model predicts the next token correctly
-
-✔️ 4. Setting Up Training Pipeline
-
-Using HuggingFace Transformers, Accelerate, and Trainer, the notebook configures:
-
-Model loading
-
-Tokenizer alignment
+AutoTokenizer
 
 TrainingArguments
 
 Mixed precision (fp16/bf16)
 
-Gradient accumulation for small GPU setups
+Gradient accumulation
+
+Checkpoint saving
 
 Evaluation steps
 
-Checkpointing & logging
+Step 5 — Run Training (Continued Pretraining)
 
-✔️ 5. Running Non-Instruction Finetuning
+During training:
 
-This is the core of the notebook:
+Loss decreases as model learns domain patterns.
 
-CLM training loop
+Model becomes fluent in vocabulary/style of your text.
 
-Loss curve explanation
+No Q/A or instructions required.
 
-How the model learns domain patterns
+Step 6 — Save & Export Model
 
-How raw text finetuning differs from instruction finetuning
+Outputs include:
 
-✔️ 6. Saving & Exporting the Finetuned Model
+Finetuned model weights
 
-The notebook shows:
+Tokenizer
 
-Saving weights
+Final + intermediate checkpoints
 
-Saving tokenizer
+Training logs
 
-Pushing to HuggingFace Hub (optional)
+Step 7 — Testing the Model
 
-Loading the trained model for inference
+The notebook demonstrates:
 
-✔️ 7. Testing the Model
+Domain-aware text generation
 
-Examples of how the model behaves differently after finetuning:
+Better completion accuracy
 
-Better domain terminology usage
+Style transformation based on learned patterns
 
-More context-aware completions
+3. Folder Structure
 
-Improved coherence in the target domain
+Expected repository structure:
 
-📂 Project Structure
-Non_Instruction_pretrain_llm_finetuning_on_domain_specific_data.ipynb
-data/
-    domain_corpus.txt (your custom text)
-model/
-    finetuned_model/
-README.md
+├── data/
+│   └── domain_corpus.txt
+├── model/
+│   └── finetuned_model/
+├── Non_Instruction_pretrain_llm_finetuning_on_domain_specific_data.ipynb
+└── README.md
 
-🧠 Key Concepts Explained in the Notebook
-🔹 What is Non-Instruction Pretraining?
+4. Usage Guide
+4.1. Installation
 
-It is the process of continuing to train a model on raw text without prompts or Q/A pairs.
-Useful when your goal is:
+Install required Python packages:
 
-Domain vocabulary adaptation
-
-Style alignment
-
-Knowledge infusion
-
-Continuing LLaMA-like pretraining
-
-🔹 Why Use It?
-
-No need to create instruction datasets
-
-Much cheaper than pretraining from scratch
-
-Works well even with small domain text
-
-Improves downstream instruction-tuning quality
-
-🚀 How to Use This Notebook
-1. Clone the Repo
-git clone <your-repo-url>
-cd your-repo
-
-2. Install Dependencies
-pip install -r requirements.txt
+pip install transformers datasets accelerate bitsandbytes
 
 
-Typical libraries include:
+(Optional for GPU optimization):
 
-transformers
+pip install peft
 
-datasets
+4.2. Prepare Your Domain Data
 
-accelerate
+Place your text corpus inside:
 
-bitsandbytes (optional)
+data/domain_corpus.txt
 
-3. Add Your Custom Text Data
 
-Place your domain text inside:
+This file may contain:
 
-/data/domain_corpus.txt
+Articles
 
-4. Run Notebook Cell-by-Cell
+Research papers
 
-Open the notebook:
+Domain reports
+
+Logs
+
+Documentation
+
+Any raw text
+
+No formatting is required.
+
+4.3. Running the Notebook
+
+Start Jupyter:
 
 jupyter notebook
 
 
-The notebook will:
+Then open:
 
-Load your corpus
+Non_Instruction_pretrain_llm_finetuning_on_domain_specific_data.ipynb
 
-Tokenize & preprocess
 
-Train the model
+Execute the cells sequentially.
 
-Save outputs
+5. Technical Details
+5.1. Training Objective: Causal Language Modeling
 
-5. Use the Model
+Causal LM trains the model to predict the next token:
+
+P(token_n | token_1, token_2, ..., token_{n-1})
+
+
+This teaches:
+
+Domain terminology
+
+Writing structure
+
+Semantic relations
+
+Context continuity
+
+5.2. Why Non-Instruction Finetuning?
+Feature	Benefit
+No prompts required	Faster dataset preparation
+Uses plain text	Minimal overhead
+Efficient	Works on small GPUs
+Domain specialization	More accurate responses
+Prepares model for instruction tuning	Better final performance
+5.3. Model Compatibility
+
+This pipeline supports:
+
+TinyLLaMA
+
+LLaMA / LLaMA-2 / LLaMA-3 variants
+
+Mistral
+
+Gemma
+
+Falcon
+
+GPT-NeoX / Pythia
+
+As long as the model uses Causal LM.
+
+6. Inference After Training
+
+Example inference script:
+
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-tok = AutoTokenizer.from_pretrained("path/to/finetuned_model")
-model = AutoModelForCausalLM.from_pretrained("path/to/finetuned_model")
+tok = AutoTokenizer.from_pretrained("model/finetuned_model")
+model = AutoModelForCausalLM.from_pretrained("model/finetuned_model")
 
-📉 Training Tips Included in the Notebook
+prompt = "Explain the key concepts in my domain:"
+inputs = tok(prompt, return_tensors="pt")
 
-The notebook explains:
+outputs = model.generate(**inputs, max_length=200)
+print(tok.decode(outputs[0], skip_special_tokens=True))
 
-The effect of sequence length
+7. Best Practices
 
-Training on limited GPU memory
+Ensure dataset quality → model quality
 
-Choosing batch sizes
+Remove repeated paragraphs
 
-Reducing overfitting
+Use >50k tokens of domain text for meaningful adaptation
 
-Using gradient accumulation
+Longer training sequences capture better context
 
-Efficient use of LoRA (optional)
+Use lower learning_rate for stable continued pretraining (e.g., 5e-5 to 1e-4)
 
-📦 Outputs You Get
+8. Limitations
 
-After successful training, you will have:
+Not suitable for instruction following (requires instruction-tuning stage).
 
-✔️ Finetuned LLaMA/TinyLLaMA model
-✔️ Tokenizer
-✔️ Training logs
-✔️ Evaluation metrics
-✔️ Model ready for downstream instruction-tuning
-🙌 Why This Notebook Is Useful
+Bad input text → degraded model behavior
 
-This notebook is ideal for:
+Large models require powerful GPUs
 
-Researchers
-
-Students
-
-Startups training small domain models
-
-Custom enterprise LLM use-cases
-
-Anyone working with raw text instead of Q/A datasets
-
-📧 Author Info
+9. Author
 
 Ranjan Yadav
 
