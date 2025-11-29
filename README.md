@@ -1,4 +1,4 @@
-📘 Documentation: Non-Instruction Pretraining & Domain-Specific Finetuning of LLMs
+# 📘 Documentation: Non-Instruction Pretraining & Domain-Specific Finetuning of LLMs
 
 This documentation describes the workflow, methodology, and usage of the Jupyter notebook
 Non_Instruction_pretrain_llm_finetuning_on_domain_specific_data.ipynb,
